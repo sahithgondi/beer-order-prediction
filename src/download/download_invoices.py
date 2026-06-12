@@ -162,8 +162,41 @@ def run():
                 # The view button is the first button with the EyeOn icon in the table body
                 view_btn = page.locator("tbody button:has(svg[data-icon-name='EyeOn'])").first
                 view_btn.wait_for(state="visible", timeout=10000)
+
+                # remember where we are so we can tell if the click routed us somewhere new
+                list_url = page.url
                 view_btn.click()
                 print(f"Clicked View Details for invoice {invoice_number or '[unknown]'}")
+
+                # the invoice links have no href, so details opens via js.
+                # could be a route change or a modal, handle both
+                try:
+                    page.wait_for_url(lambda url: url != list_url, timeout=10000)
+                    print("URL changed, details is its own page")
+                except TimeoutError:
+                    print("URL did not change, checking for a modal/drawer instead")
+                    page.wait_for_selector(
+                        "[role='dialog'], .hexa-modal, [class*='drawer']",
+                        state="visible",
+                        timeout=10000,
+                    )
+                    print("Details opened in a modal/drawer")
+
+                # let it finish rendering before we capture anything
+                page.wait_for_timeout(1000)
+
+                print("Details page URL:", page.url)
+                page.screenshot(path="invoice_details.png")
+                with open("debug_details_page.html", "w", encoding="utf-8") as f:
+                    f.write(page.content())
+
+                # quick counts so we know what to target for the download step
+                print("button count:", page.locator("button").count())
+                print("'Download' elements:", page.locator("text=/download/i").count())
+                print("'Export' elements:", page.locator("text=/export/i").count())
+                print("'PDF' elements:", page.locator("text=/pdf/i").count())
+
+                print(f"Reached invoice details page for invoice {invoice_number or '[unknown]'}")
             else:
                 print("Most recent invoice total is not above 200, so skipping.")
 
