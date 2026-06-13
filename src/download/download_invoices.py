@@ -1,4 +1,8 @@
 import os
+import re
+import sys
+import subprocess
+from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, TimeoutError
@@ -16,6 +20,13 @@ print("USERNAME value:", USERNAME)
 # make sure the directory exists
 DOWNLOAD_DIR = Path("data/downloads")
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# raw invoice csvs live here, named by invoice date like 2026-03-17.csv (ingest.py reads the date from the filename)
+RAW_DIR = Path("data/raw")
+RAW_DIR.mkdir(parents=True, exist_ok=True)
+
+# table dates look like "Tuesday, June 09, 2026"
+DATE_RE = re.compile(r"^\w+, \w+ \d{1,2}, \d{4}$")
 
 
 def run():
