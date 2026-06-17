@@ -207,6 +207,13 @@ def run():
                 print("'Export' elements:", page.locator("text=/export/i").count())
                 print("'PDF' elements:", page.locator("text=/pdf/i").count())
 
+                # the download trigger has no aria-label, so anchor off its svg icon.
+                # clicking it opens the dropdown with the 3 download options (PDF / CSV / etc.)
+                download_menu_btn = page.locator("button:has(svg[data-icon-name='Download'])").first
+                download_menu_btn.wait_for(state="visible", timeout=10000)
+                download_menu_btn.click()
+                print("Opened the download options dropdown")
+
                 print(f"Reached invoice details page for invoice {invoice_number or '[unknown]'}")
             else:
                 print("Most recent invoice total is not above 200, so skipping.")
